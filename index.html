@@ -19,7 +19,7 @@
     <!-- CONFIG -->
     <script>
         // ==========================================
-        //  ใส่ URL ของคุณที่นี่
+        //  ใส่ URL Web App ของคุณที่นี่
         // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbweuotqV6OkcZDlB67l6zchQEmjTRPRhHYxZ2V6S0FwZKmySHeDHMG5ZQ6_PoUHG2pWYg/exec"; 
     </script>
@@ -109,10 +109,10 @@
             </div>
         </div>
 
-        <!-- TAB: SALES REPORT (แก้ไขใหม่) -->
+        <!-- TAB: SALES REPORT -->
         <div id="admin-sales" class="hidden space-y-6">
             
-            <!-- Control Bar: Today's Total & Date Filter -->
+            <!-- Control Bar -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- 1. ยอดขายวันนี้ -->
                 <div class="bg-white p-5 rounded-xl shadow-md border border-green-100 flex justify-between items-center">
@@ -211,7 +211,7 @@
         </div>
     </div>
 
-    <!-- REPORT SUMMARY MODAL (เพิ่มใหม่) -->
+    <!-- REPORT SUMMARY MODAL -->
     <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -220,7 +220,6 @@
             </div>
             
             <div class="p-5 space-y-4">
-                <!-- Date Range Selector -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col sm:flex-row gap-4 items-end">
                     <div class="w-full">
                         <label class="text-xs font-bold text-gray-500">เริ่มวันที่</label>
@@ -235,7 +234,6 @@
                     </button>
                 </div>
 
-                <!-- Result Area -->
                 <div id="report-result" class="hidden space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-green-50 p-4 rounded border border-green-100 text-center">
@@ -247,7 +245,6 @@
                             <p class="text-2xl font-bold text-purple-700" id="report-order-count">0</p>
                         </div>
                     </div>
-
                     <div class="border rounded-lg overflow-hidden">
                         <div class="bg-gray-100 px-4 py-2 font-bold text-sm text-gray-700">สินค้าที่ขายได้ (เรียงตามจำนวน)</div>
                         <div class="max-h-60 overflow-y-auto">
@@ -267,7 +264,7 @@
     <!-- JAVASCRIPT LOGIC -->
     <script>
         // === STATE ===
-        let products = [], cart = [], allSalesData = []; // เก็บข้อมูลการขายทั้งหมดไว้ที่นี่เพื่อ Filter
+        let products = [], cart = [], allSalesData = [];
         let currentCat = 'all';
         let pollingInterval = null;
         let activeAdminTab = 'kitchen';
@@ -277,70 +274,67 @@
         window.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
             checkExistingOrder();
-            // Set Default Date Filter to Today
+            // Default Date Filters
             document.getElementById('filter-date').valueAsDate = new Date();
-            // Set Report Date Range Default
             document.getElementById('report-start').valueAsDate = new Date();
             document.getElementById('report-end').valueAsDate = new Date();
-            
             feather.replace();
         });
 
-        // === DATE HELPERS (สำคัญมาก: แปลง พ.ศ. เป็น ค.ศ.) ===
+        // === DATE HELPERS (IMPORTANT FIX) ===
+        // ฟังก์ชันนี้ถูกปรับปรุงให้รองรับทั้ง Date String ปกติ และ String แบบไทย
         function parseThaiDate(dateStr) {
-            // dateStr format ex: "17/12/2568 18:41:00"
             if (!dateStr) return null;
-            const parts = dateStr.split(' '); // แยกวันที่กับเวลา
-            const dateParts = parts[0].split('/'); // แยก วัน/เดือน/ปี
             
+            // กรณี dateStr เป็น ISO string หรือ format มาตรฐานอยู่แล้ว
+            if (dateStr.includes('T') || dateStr.includes('-')) {
+                return new Date(dateStr);
+            }
+
+            // กรณี format "17/12/2568 18:41:00"
+            const parts = dateStr.split(' ');
+            if (parts.length < 1) return new Date();
+            
+            const dateParts = parts[0].split('/');
             if (dateParts.length !== 3) return new Date(dateStr); // Fallback
 
             let day = parseInt(dateParts[0]);
             let month = parseInt(dateParts[1]) - 1; // JS month 0-11
             let year = parseInt(dateParts[2]);
 
-            // ถ้าปี > 2400 สันนิษฐานว่าเป็น พ.ศ. ให้ลบ 543
+            // ตรวจสอบว่าเป็น พ.ศ. หรือไม่ (ถ้ามากกว่า 2400 สันนิษฐานว่าเป็น พ.ศ.)
             if (year > 2400) year -= 543;
 
             return new Date(year, month, day);
         }
 
         function isSameDate(d1, d2) {
+            if(!d1 || !d2) return false;
             return d1.getFullYear() === d2.getFullYear() &&
                    d1.getMonth() === d2.getMonth() &&
                    d1.getDate() === d2.getDate();
         }
 
-        // === ADMIN: SALES & REPORT LOGIC ===
-
-        // 1. Logic ดึงข้อมูลและคำนวณยอดวันนี้
+        // === ADMIN: SALES LOGIC ===
         function processSalesData(sales) {
-            allSalesData = sales; // เก็บค่าไว้ใน Global Variable
-            applyDateFilter(); // เรียกใช้ฟังก์ชันกรอง
+            allSalesData = sales;
+            applyDateFilter();
         }
 
-        // 2. ฟังก์ชันกรองตารางตามวันที่เลือก (Filter)
         function applyDateFilter() {
             const filterInput = document.getElementById('filter-date').value;
             const filterDate = filterInput ? new Date(filterInput) : null;
             
-            const tbody = document.getElementById('sales-list');
-            
-            // กรองข้อมูล
             const filteredSales = allSalesData.filter(s => {
-                if (!filterDate) return true; // ถ้าไม่เลือกวัน ให้โชว์หมด
+                if (!filterDate) return true;
                 const recordDate = parseThaiDate(s.time);
                 return isSameDate(recordDate, filterDate);
             });
 
-            // อัปเดตตาราง
             renderSalesTable(filteredSales);
-            
-            // คำนวณยอดขาย "วันนี้" (แยกคำนวณจากตาราง)
             calculateTodayMetrics();
         }
 
-        // 3. Render ตารางรายการขาย
         function renderSalesTable(sales) {
             const tbody = document.getElementById('sales-list');
             document.getElementById('table-row-count').innerText = `${sales.length} รายการ`;
@@ -348,6 +342,13 @@
             if(!sales.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">ไม่พบรายการในช่วงเวลานี้</td></tr>`;
 
             tbody.innerHTML = sales.map(s => {
+                // แปลง format วันที่ให้ดูง่ายขึ้นในตาราง
+                let displayTime = s.time;
+                try {
+                    const d = parseThaiDate(s.time);
+                    if(d) displayTime = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute:'2-digit' });
+                } catch(e){}
+
                 const isPaid = s.paymentStatus === 'ชำระเงินแล้ว';
                 const statusBadge = isPaid 
                     ? `<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">ชำระแล้ว</span>`
@@ -359,7 +360,7 @@
 
                 return `
                 <tr class="hover:bg-gray-50 border-b">
-                    <td class="p-4"><div class="text-xs text-gray-500">${s.time}</div><div class="font-bold">${s.tableName}</div></td>
+                    <td class="p-4"><div class="text-xs text-gray-500">${displayTime}</div><div class="font-bold">${s.tableName}</div></td>
                     <td class="p-4"><div class="text-sm font-medium">${s.buyerName}</div><div class="text-xs text-gray-500 truncate w-32">${s.items}</div></td>
                     <td class="p-4 text-right font-bold text-gray-700">฿${s.total}</td>
                     <td class="p-4 text-center">${statusBadge}</td>
@@ -369,7 +370,6 @@
             feather.replace();
         }
 
-        // 4. คำนวณยอดขายรวม "วันนี้" เท่านั้น
         function calculateTodayMetrics() {
             const today = new Date();
             const todaySales = allSalesData.filter(s => {
@@ -380,7 +380,7 @@
             document.getElementById('sales-today-total').innerText = `฿${total.toLocaleString()}`;
         }
 
-        // 5. REPORT MODAL FUNCTIONS
+        // === REPORT SUMMARY LOGIC ===
         function openReportModal() {
             document.getElementById('report-modal').classList.remove('hidden');
             document.getElementById('report-result').classList.add('hidden');
@@ -397,29 +397,21 @@
 
             const startDate = new Date(startStr);
             const endDate = new Date(endStr);
-            // ตั้งเวลาให้ครอบคลุมทั้งวัน
             startDate.setHours(0,0,0,0);
             endDate.setHours(23,59,59,999);
 
-            // กรองข้อมูลช่วงเวลา และต้องชำระเงินแล้วเท่านั้น (Optional: หรือจะเอาทั้งหมดก็ได้)
             const reportData = allSalesData.filter(s => {
                 const d = parseThaiDate(s.time);
-                // เช็คช่วงเวลา และ เช็คสถานะ (ถ้าต้องการเฉพาะที่จ่ายเงินแล้วให้ uncomment บรรทัดล่าง)
-                // return d >= startDate && d <= endDate && s.paymentStatus === 'ชำระเงินแล้ว';
+                if(!d) return false;
                 return d >= startDate && d <= endDate; 
             });
 
-            // คำนวณยอดรวม
             const grandTotal = reportData.reduce((sum, item) => sum + item.total, 0);
-            
-            // นับจำนวนสินค้า (Item Aggregation)
             const itemCounts = {};
             reportData.forEach(order => {
-                // order.items format: "ข้าวมันไก่ (2), น้ำโค้ก (1)"
+                // Parse items format: "Name (Qty), Name2 (Qty)"
                 const itemsArr = order.items.split(', ');
                 itemsArr.forEach(itemStr => {
-                    // Extract Name and Qty using Regex or Split
-                    // itemStr looks like "Name (Qty)"
                     const match = itemStr.match(/(.*) \((\d+)\)/);
                     if(match) {
                         const name = match[1];
@@ -430,12 +422,10 @@
                 });
             });
 
-            // แปลง Object เป็น Array เพื่อเรียงลำดับ
             const sortedItems = Object.entries(itemCounts)
                 .map(([name, qty]) => ({ name, qty }))
-                .sort((a, b) => b.qty - a.qty); // เรียงมากไปน้อย
+                .sort((a, b) => b.qty - a.qty);
 
-            // แสดงผล UI
             document.getElementById('report-grand-total').innerText = `฿${grandTotal.toLocaleString()}`;
             document.getElementById('report-order-count').innerText = `${reportData.length}`;
             
@@ -447,20 +437,17 @@
             `).join('');
             
             document.getElementById('report-item-list').innerHTML = listHtml || '<tr><td colspan="2" class="p-4 text-center text-gray-400">ไม่มีข้อมูล</td></tr>';
-            
             document.getElementById('report-result').classList.remove('hidden');
         }
 
-        // === GENERAL FUNCTIONS (User, Cart, etc.) ===
-        // ... (Functions เดิม: fetchProducts, addToCart, submitOrder ฯลฯ ใช้เหมือนเดิม) ...
-        
+        // === GENERAL & USER LOGIC ===
         async function fetchProducts() {
             toggleLoading(true);
             try {
                 const res = await fetch(`${API_URL}?action=getProducts`);
                 products = await res.json();
                 renderProducts();
-            } catch (err) { alert("โหลดข้อมูลไม่สำเร็จ"); } 
+            } catch (err) { console.error(err); alert("โหลดเมนูไม่สำเร็จ"); } 
             finally { toggleLoading(false); }
         }
 
@@ -500,8 +487,9 @@
 
         function updateCartUI() {
             const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-            document.getElementById('cart-badge').innerText = totalItems;
-            document.getElementById('cart-badge').classList.toggle('hidden', totalItems === 0);
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = totalItems;
+            badge.classList.toggle('hidden', totalItems === 0);
             
             const container = document.getElementById('cart-items');
             container.innerHTML = cart.map((item, idx) => `
@@ -550,11 +538,11 @@
                 cart = []; updateCartUI(); renderProducts(); toggleCartModal(false);
                 showStatusBar(orderId); startPolling(orderId);
                 alert("✅ สั่งซื้อสำเร็จ!");
-            } catch (err) { alert("Error"); }
+            } catch (err) { alert("เกิดข้อผิดพลาดในการสั่งซื้อ"); }
             finally { toggleLoading(false); }
         }
 
-        // Polling Logic
+        // Polling
         function checkExistingOrder() {
             const lastOrder = localStorage.getItem('lastOrderId');
             if(lastOrder) { showStatusBar(lastOrder); startPolling(lastOrder); }
@@ -632,7 +620,7 @@
                 } else {
                     const res = await fetch(`${API_URL}?action=getSalesReport`);
                     const sales = await res.json();
-                    processSalesData(sales); // ส่งข้อมูลไปประมวลผล
+                    processSalesData(sales);
                 }
             } catch(e) { console.error(e); } 
             finally { toggleLoading(false); }
