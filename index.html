@@ -12,6 +12,13 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .status-pulse { animation: pulse-soft 2s infinite; }
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        /* Style สำหรับ Date Picker ให้ดูดีขึ้น */
+        input[type="date"] {
+            appearance: none;
+            -webkit-appearance: none;
+            color: #374151;
+            font-family: 'Sarabun', sans-serif;
+        }
     </style>
 </head>
 <body class="bg-gray-50 pb-24">
@@ -19,9 +26,9 @@
     <!-- CONFIG -->
     <script>
         // ==========================================
-        //  ใส่ URL ของคุณที่นี่
+        //  ใส่ URL Web App ที่ได้จากการ Deploy ใหม่ที่นี่
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbweuotqV6OkcZDlB67l6zchQEmjTRPRhHYxZ2V6S0FwZKmySHeDHMG5ZQ6_PoUHG2pWYg/exec"; 
+        const API_URL = "วาง_WEB_APP_URL_ของคุณที่นี่"; 
     </script>
 
     <!-- Loading -->
@@ -109,29 +116,45 @@
             </div>
         </div>
 
-        <!-- TAB: SALES REPORT -->
+        <!-- TAB: SALES REPORT (UPDATED) -->
         <div id="admin-sales" class="hidden space-y-6">
-            <!-- Summary Card -->
-            <div class="bg-white p-6 rounded-xl shadow-md flex justify-between items-center border border-gray-100">
-                <div>
-                    <h3 class="text-gray-500 font-medium">ยอดขายรวมทั้งหมด</h3>
-                    <p class="text-3xl font-bold text-green-600 mt-1" id="sales-total-revenue">฿0.00</p>
+            <!-- Filter & Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Date Filter -->
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex flex-col justify-center">
+                    <label class="text-sm text-gray-500 mb-1 font-medium">เลือกวันที่ดูรายงาน:</label>
+                    <div class="flex gap-2">
+                        <input type="date" id="sales-date-picker" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700" onchange="filterSalesByDate()">
+                        <button onclick="resetDateFilter()" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">วันนี้</button>
+                    </div>
                 </div>
-                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                    <i data-feather="dollar-sign"></i>
+
+                <!-- Total Revenue -->
+                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-gray-500 font-medium text-sm">ยอดขายรวม (เฉพาะวันที่เลือก)</h3>
+                        <p class="text-3xl font-bold text-green-600 mt-1" id="sales-total-revenue">฿0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                        <i data-feather="dollar-sign"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- Table -->
             <div class="bg-white rounded-xl shadow overflow-hidden">
-                <div class="p-4 bg-blue-50 border-b border-blue-100 font-bold text-blue-800 flex items-center gap-2">
-                    <i data-feather="file-text" class="w-4 h-4"></i> รายการขาย & ชำระเงิน
+                <div class="p-4 bg-blue-50 border-b border-blue-100 font-bold text-blue-800 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i data-feather="file-text" class="w-4 h-4"></i> 
+                        <span id="sales-table-title">รายการขายวันนี้</span>
+                    </div>
+                    <span class="text-xs font-normal bg-white px-2 py-1 rounded border text-blue-600" id="sales-count-badge">0 รายการ</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                             <tr>
-                                <th class="p-4">วันที่/โต๊ะ</th>
+                                <th class="p-4">เวลา/โต๊ะ</th>
                                 <th class="p-4">รายการ</th>
                                 <th class="p-4 text-right">ยอดเงิน</th>
                                 <th class="p-4 text-center">สถานะชำระ</th>
@@ -176,19 +199,16 @@
                     <p class="text-gray-500 text-sm">ยอดที่ต้องชำระ</p>
                     <p class="text-4xl font-bold text-blue-600" id="pay-total-display">฿0.00</p>
                 </div>
-                
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">รับเงินมา (บาท)</label>
                         <input type="number" id="pay-received" class="w-full p-3 border rounded-lg text-xl text-center focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" oninput="calculateChange()">
                     </div>
-                    
                     <div class="bg-gray-100 p-4 rounded-lg flex justify-between items-center">
                         <span class="font-bold text-gray-700">เงินทอน</span>
                         <span class="font-bold text-xl text-green-600" id="pay-change">฿0.00</span>
                     </div>
                 </div>
-
                 <button onclick="confirmPayment()" class="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-lg flex justify-center items-center gap-2">
                     <i data-feather="check-circle"></i> ยืนยันการชำระ
                 </button>
@@ -202,13 +222,17 @@
         let products = [], cart = [], currentCat = 'all';
         let pollingInterval = null;
         let activeAdminTab = 'kitchen';
-        let currentPaymentOrder = null; // เก็บออเดอร์ที่กำลังจะจ่ายเงิน
+        let currentPaymentOrder = null;
+        let allSalesData = []; // เก็บข้อมูลยอดขายทั้งหมดที่โหลดมา
 
         // === INIT ===
         window.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
             checkExistingOrder();
             feather.replace();
+            
+            // ตั้งค่า Date Picker เป็นวันนี้
+            document.getElementById('sales-date-picker').valueAsDate = new Date();
         });
 
         // === USER FUNCTIONALITY ===
@@ -243,9 +267,6 @@
             }).join('');
         }
         
-        // (ส่วน Cart และ Filter Categories ใช้โค้ดเดิมได้ แต่เพื่อความกระชับ ขอละไว้ตรงนี้... Copy จากอันเก่าได้เลย หรือให้ผมเขียนเต็มให้ไหม? 
-        // เขียนเต็มให้เลยดีกว่าครับเพื่อความชัวร์)
-        
         function filterCategory(cat) {
             currentCat = cat;
             document.querySelectorAll('.cat-btn').forEach(btn => btn.className = `cat-btn flex-shrink-0 px-6 py-2 rounded-full transition ${btn.dataset.cat===cat ? 'bg-blue-600 text-white shadow-md':'bg-white text-gray-600 border border-gray-200'}`);
@@ -264,7 +285,6 @@
             const badge = document.getElementById('cart-badge');
             badge.innerText = totalItems;
             badge.classList.toggle('hidden', totalItems === 0);
-            
             const container = document.getElementById('cart-items');
             container.innerHTML = cart.map((item, idx) => `
                 <div class="flex gap-4 items-center">
@@ -279,7 +299,6 @@
                         <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-gray-200 rounded">+</button>
                     </div>
                 </div>`).join('');
-            
             const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
             document.getElementById('cart-total').innerText = `฿${total}`;
         }
@@ -316,7 +335,7 @@
             finally { toggleLoading(false); }
         }
 
-        // === USER POLLING ===
+        // === POLLING STATUS ===
         function checkExistingOrder() {
             const lastOrder = localStorage.getItem('lastOrderId');
             if(lastOrder) { showStatusBar(lastOrder); startPolling(lastOrder); }
@@ -350,7 +369,7 @@
         }
 
         // ===============================================
-        //  ADMIN SYSTEM (NEW UPDATE)
+        //  ADMIN SYSTEM
         // ===============================================
 
         function accessAdmin() {
@@ -368,7 +387,6 @@
 
         function switchAdminTab(tab) {
             activeAdminTab = tab;
-            // UI Toggle
             const btnKitchen = document.getElementById('tab-kitchen');
             const btnSales = document.getElementById('tab-sales');
             const divKitchen = document.getElementById('admin-kitchen');
@@ -397,8 +415,8 @@
                     renderKitchenList(orders);
                 } else {
                     const res = await fetch(`${API_URL}?action=getSalesReport`);
-                    const sales = await res.json();
-                    renderSalesList(sales);
+                    allSalesData = await res.json(); // เก็บข้อมูลดิบไว้ก่อน
+                    filterSalesByDate(); // เรียกฟังก์ชันกรองและแสดงผล
                 }
             } catch(e) { console.error(e); } 
             finally { toggleLoading(false); }
@@ -413,7 +431,6 @@
                 if(o.status === 'กำลังปรุง') statusColor = "bg-blue-100 text-blue-700";
                 if(o.status === 'เสร็จสิ้น') statusColor = "bg-green-100 text-green-700";
                 
-                // ปุ่ม Action
                 let buttons = '';
                 if(o.status === 'รอดำเนินการ') {
                     buttons = `<button onclick="setKitchenStatus('${o.orderNumber}', 'กำลังปรุง')" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded text-xs flex items-center gap-1 shadow"><i data-feather="play-circle" class="w-4 h-4"></i> ปรุง</button>`;
@@ -442,15 +459,54 @@
             finally { toggleLoading(false); }
         }
 
-        // --- Render Sales & Payment ---
+        // --- SALES & FILTERING LOGIC (NEW) ---
+        function resetDateFilter() {
+            document.getElementById('sales-date-picker').valueAsDate = new Date();
+            filterSalesByDate();
+        }
+
+        function filterSalesByDate() {
+            const inputDate = document.getElementById('sales-date-picker').value; // yyyy-mm-dd
+            if(!inputDate) return;
+
+            // แปลงวันที่ input เป็น array [YYYY, MM, DD]
+            const [selY, selM, selD] = inputDate.split('-').map(Number);
+
+            // กรองข้อมูล
+            const filteredSales = allSalesData.filter(item => {
+                // item.time รูปแบบ "17/12/2568 18:30:00"
+                // แยก String
+                const [datePart, timePart] = item.time.split(' ');
+                const [d, m, yThai] = datePart.split('/').map(Number);
+                
+                // แปลง พ.ศ. เป็น ค.ศ. (2568 - 543 = 2025)
+                const yEng = yThai > 2400 ? yThai - 543 : yThai;
+
+                // เปรียบเทียบ
+                return d === selD && m === selM && yEng === selY;
+            });
+
+            // อัปเดต UI
+            const tableTitle = document.getElementById('sales-table-title');
+            const formattedDate = new Date(selY, selM-1, selD).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+            tableTitle.innerText = `รายการขาย: ${formattedDate}`;
+
+            renderSalesList(filteredSales);
+        }
+
         function renderSalesList(sales) {
             const tbody = document.getElementById('sales-list');
+            const badge = document.getElementById('sales-count-badge');
             
             // Calculate Total Revenue
             const totalRevenue = sales.reduce((sum, item) => sum + item.total, 0);
-            document.getElementById('sales-total-revenue').innerText = `฿${totalRevenue.toFixed(2)}`;
+            document.getElementById('sales-total-revenue').innerText = `฿${totalRevenue.toLocaleString()}`;
+            badge.innerText = `${sales.length} รายการ`;
 
-            if(!sales.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">ยังไม่มีรายการขาย</td></tr>`;
+            if(!sales.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400 border-b">ไม่มีรายการขายในวันที่เลือก</td></tr>`;
+                return;
+            }
 
             tbody.innerHTML = sales.map(s => {
                 const isPaid = s.paymentStatus === 'ชำระเงินแล้ว';
@@ -459,13 +515,13 @@
                     : `<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">รอชำระ</span>`;
                 
                 const actionBtn = isPaid
-                    ? `<span class="text-gray-400 text-xs"><i data-feather="check"></i> เรียบร้อย</span>`
+                    ? `<span class="text-gray-400 text-xs flex justify-center items-center gap-1"><i data-feather="check" class="w-3 h-3"></i> เรียบร้อย</span>`
                     : `<button onclick='openPaymentModal(${JSON.stringify(s)})' class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow">ชำระเงิน</button>`;
 
                 return `
-                <tr class="hover:bg-gray-50 border-b">
-                    <td class="p-4"><div class="text-xs text-gray-500">${s.time}</div><div class="font-bold">${s.tableName}</div></td>
-                    <td class="p-4"><div class="text-sm font-medium">${s.buyerName}</div><div class="text-xs text-gray-500 truncate w-32">${s.items}</div></td>
+                <tr class="hover:bg-gray-50 border-b last:border-0">
+                    <td class="p-4"><div class="text-xs text-gray-500">${s.time.split(' ')[1]}</div><div class="font-bold text-gray-800">${s.tableName}</div></td>
+                    <td class="p-4"><div class="text-sm font-medium text-gray-800">${s.buyerName}</div><div class="text-xs text-gray-500 truncate w-40 mt-0.5">${s.items}</div></td>
                     <td class="p-4 text-right font-bold text-gray-700">฿${s.total}</td>
                     <td class="p-4 text-center">${statusBadge}</td>
                     <td class="p-4 text-center">${actionBtn}</td>
@@ -523,7 +579,7 @@
                     }) 
                 });
                 closePaymentModal();
-                refreshAdminData(); // Reload Sales Table
+                refreshAdminData(); // ระบบจะรีเฟรชและ filter วันที่เดิมให้อัตโนมัติ
                 alert("บันทึกการชำระเงินเรียบร้อย");
             } catch(e) { alert("เกิดข้อผิดพลาด"); }
             finally { toggleLoading(false); }
