@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบ POS ร้านอาหาร</title>
+    <title>ระบบ POS ร้านอาหาร Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -12,13 +12,6 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .status-pulse { animation: pulse-soft 2s infinite; }
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        /* Style สำหรับ Date Picker ให้ดูดีขึ้น */
-        input[type="date"] {
-            appearance: none;
-            -webkit-appearance: none;
-            color: #374151;
-            font-family: 'Sarabun', sans-serif;
-        }
     </style>
 </head>
 <body class="bg-gray-50 pb-24">
@@ -26,7 +19,7 @@
     <!-- CONFIG -->
     <script>
         // ==========================================
-        //  ใส่ URL Web App ที่ได้จากการ Deploy ใหม่ที่นี่
+        //  ใส่ URL ของคุณที่นี่
         // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbweuotqV6OkcZDlB67l6zchQEmjTRPRhHYxZ2V6S0FwZKmySHeDHMG5ZQ6_PoUHG2pWYg/exec"; 
     </script>
@@ -43,7 +36,7 @@
             <div class="text-2xl font-bold text-blue-600 cursor-pointer" onclick="switchPage('user')">FOOD APP</div>
             <div class="flex items-center gap-3">
                 <button onclick="accessAdmin()" class="text-gray-500 hover:text-blue-600 font-medium text-sm flex items-center gap-1">
-                    <i data-feather="settings" class="w-4 h-4"></i> จัดการร้าน
+                    <i data-feather="settings" class="w-4 h-4"></i> หลังบ้าน
                 </button>
                 <button onclick="toggleCartModal(true)" class="relative p-2 bg-gray-100 rounded-full hover:bg-gray-200">
                     <i data-feather="shopping-cart" class="w-5 h-5 text-gray-700"></i>
@@ -53,7 +46,7 @@
         </div>
     </nav>
 
-    <!-- ================= VIEW: USER ================= -->
+    <!-- ================= VIEW: USER (ลูกค้า) ================= -->
     <div id="view-user" class="container mx-auto p-4 transition-opacity duration-300">
         <!-- Category -->
         <div class="flex overflow-x-auto gap-3 mb-6 hide-scroll pb-2">
@@ -80,26 +73,26 @@
         </div>
     </div>
 
-    <!-- ================= VIEW: ADMIN ================= -->
+    <!-- ================= VIEW: ADMIN (หลังบ้าน) ================= -->
     <div id="view-admin" class="container mx-auto p-4 hidden">
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h2 class="text-2xl font-bold text-gray-800">ระบบหลังบ้าน</h2>
+            <h2 class="text-2xl font-bold text-gray-800">จัดการร้าน</h2>
             
             <!-- Admin Tabs -->
             <div class="flex bg-gray-200 p-1 rounded-lg">
-                <button onclick="switchAdminTab('kitchen')" id="tab-kitchen" class="px-4 py-2 rounded-md font-medium text-sm bg-white shadow-sm text-gray-800 transition">ครัว (Orders)</button>
-                <button onclick="switchAdminTab('sales')" id="tab-sales" class="px-4 py-2 rounded-md font-medium text-sm text-gray-600 hover:text-gray-800 transition">รายงานการขาย (Sales)</button>
+                <button onclick="switchAdminTab('kitchen')" id="tab-kitchen" class="px-4 py-2 rounded-md font-medium text-sm bg-white shadow-sm text-gray-800 transition">ครัว</button>
+                <button onclick="switchAdminTab('sales')" id="tab-sales" class="px-4 py-2 rounded-md font-medium text-sm text-gray-600 hover:text-gray-800 transition">รายงานการขาย</button>
             </div>
             
             <button onclick="refreshAdminData()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 flex items-center gap-2 text-sm font-bold">
-                <i data-feather="refresh-cw" class="w-4 h-4"></i> รีเฟรชข้อมูล
+                <i data-feather="refresh-cw" class="w-4 h-4"></i>
             </button>
         </div>
 
         <!-- TAB: KITCHEN -->
         <div id="admin-kitchen" class="bg-white rounded-xl shadow overflow-hidden">
             <div class="p-4 bg-orange-50 border-b border-orange-100 font-bold text-orange-800 flex items-center gap-2">
-                <i data-feather="bell" class="w-4 h-4"></i> รายการสั่งซื้อเข้าครัว
+                <i data-feather="bell" class="w-4 h-4"></i> ออเดอร์เข้าครัว
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -116,48 +109,50 @@
             </div>
         </div>
 
-        <!-- TAB: SALES REPORT (UPDATED) -->
+        <!-- TAB: SALES REPORT (แก้ไขใหม่) -->
         <div id="admin-sales" class="hidden space-y-6">
-            <!-- Filter & Summary -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Date Filter -->
-                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex flex-col justify-center">
-                    <label class="text-sm text-gray-500 mb-1 font-medium">เลือกวันที่ดูรายงาน:</label>
-                    <div class="flex gap-2">
-                        <input type="date" id="sales-date-picker" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700" onchange="filterSalesByDate()">
-                        <button onclick="resetDateFilter()" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm">วันนี้</button>
-                    </div>
-                </div>
-
-                <!-- Total Revenue -->
-                <div class="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex justify-between items-center">
+            
+            <!-- Control Bar: Today's Total & Date Filter -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 1. ยอดขายวันนี้ -->
+                <div class="bg-white p-5 rounded-xl shadow-md border border-green-100 flex justify-between items-center">
                     <div>
-                        <h3 class="text-gray-500 font-medium text-sm">ยอดขายรวม (เฉพาะวันที่เลือก)</h3>
-                        <p class="text-3xl font-bold text-green-600 mt-1" id="sales-total-revenue">฿0.00</p>
+                        <h3 class="text-gray-500 text-sm font-medium">ยอดขายรวมวันนี้</h3>
+                        <p class="text-3xl font-bold text-green-600 mt-1" id="sales-today-total">฿0.00</p>
                     </div>
-                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
                         <i data-feather="dollar-sign"></i>
                     </div>
                 </div>
+
+                <!-- 2. ค้นหาตามวันที่ -->
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex flex-col justify-center">
+                    <label class="text-xs text-gray-500 font-medium mb-1">ค้นหารายการวันที่</label>
+                    <input type="date" id="filter-date" onchange="applyDateFilter()" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <!-- 3. ปุ่ม Report -->
+                <div class="bg-white p-5 rounded-xl shadow-md border border-blue-100 flex items-center justify-center">
+                    <button onclick="openReportModal()" class="w-full h-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow transition flex items-center justify-center gap-2 py-2">
+                        <i data-feather="pie-chart"></i> สรุปรายงาน (Report)
+                    </button>
+                </div>
             </div>
 
-            <!-- Table -->
+            <!-- Table List -->
             <div class="bg-white rounded-xl shadow overflow-hidden">
-                <div class="p-4 bg-blue-50 border-b border-blue-100 font-bold text-blue-800 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i data-feather="file-text" class="w-4 h-4"></i> 
-                        <span id="sales-table-title">รายการขายวันนี้</span>
-                    </div>
-                    <span class="text-xs font-normal bg-white px-2 py-1 rounded border text-blue-600" id="sales-count-badge">0 รายการ</span>
+                <div class="p-4 bg-blue-50 border-b border-blue-100 font-bold text-blue-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2"><i data-feather="file-text" class="w-4 h-4"></i> รายการขาย & ชำระเงิน</div>
+                    <span id="table-row-count" class="text-xs font-normal text-blue-600 bg-blue-100 px-2 py-1 rounded-full">0 รายการ</span>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                        <thead class="bg-gray-50 text-gray-600 uppercase text-xs sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th class="p-4">เวลา/โต๊ะ</th>
                                 <th class="p-4">รายการ</th>
                                 <th class="p-4 text-right">ยอดเงิน</th>
-                                <th class="p-4 text-center">สถานะชำระ</th>
+                                <th class="p-4 text-center">สถานะ</th>
                                 <th class="p-4 text-center">Action</th>
                             </tr>
                         </thead>
@@ -216,26 +211,249 @@
         </div>
     </div>
 
+    <!-- REPORT SUMMARY MODAL (เพิ่มใหม่) -->
+    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-xl text-gray-800"><i data-feather="pie-chart" class="inline w-5 h-5 mr-2"></i>สรุปรายงานการขาย</h3>
+                <button onclick="closeReportModal()" class="text-gray-500 hover:text-red-500"><i data-feather="x"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <!-- Date Range Selector -->
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col sm:flex-row gap-4 items-end">
+                    <div class="w-full">
+                        <label class="text-xs font-bold text-gray-500">เริ่มวันที่</label>
+                        <input type="date" id="report-start" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <div class="w-full">
+                        <label class="text-xs font-bold text-gray-500">ถึงวันที่</label>
+                        <input type="date" id="report-end" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <button onclick="generateSummaryReport()" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-sm">
+                        ประมวลผล
+                    </button>
+                </div>
+
+                <!-- Result Area -->
+                <div id="report-result" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-green-50 p-4 rounded border border-green-100 text-center">
+                            <p class="text-gray-600 text-sm">ยอดขายรวม</p>
+                            <p class="text-2xl font-bold text-green-700" id="report-grand-total">฿0.00</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded border border-purple-100 text-center">
+                            <p class="text-gray-600 text-sm">จำนวนออเดอร์</p>
+                            <p class="text-2xl font-bold text-purple-700" id="report-order-count">0</p>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-100 px-4 py-2 font-bold text-sm text-gray-700">สินค้าที่ขายได้ (เรียงตามจำนวน)</div>
+                        <div class="max-h-60 overflow-y-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-gray-500 border-b">
+                                    <tr><th class="p-3">ชื่อสินค้า</th><th class="p-3 text-right">จำนวน</th></tr>
+                                </thead>
+                                <tbody id="report-item-list" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         // === STATE ===
-        let products = [], cart = [], currentCat = 'all';
+        let products = [], cart = [], allSalesData = []; // เก็บข้อมูลการขายทั้งหมดไว้ที่นี่เพื่อ Filter
+        let currentCat = 'all';
         let pollingInterval = null;
         let activeAdminTab = 'kitchen';
         let currentPaymentOrder = null;
-        let allSalesData = []; // เก็บข้อมูลยอดขายทั้งหมดที่โหลดมา
 
         // === INIT ===
         window.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
             checkExistingOrder();
-            feather.replace();
+            // Set Default Date Filter to Today
+            document.getElementById('filter-date').valueAsDate = new Date();
+            // Set Report Date Range Default
+            document.getElementById('report-start').valueAsDate = new Date();
+            document.getElementById('report-end').valueAsDate = new Date();
             
-            // ตั้งค่า Date Picker เป็นวันนี้
-            document.getElementById('sales-date-picker').valueAsDate = new Date();
+            feather.replace();
         });
 
-        // === USER FUNCTIONALITY ===
+        // === DATE HELPERS (สำคัญมาก: แปลง พ.ศ. เป็น ค.ศ.) ===
+        function parseThaiDate(dateStr) {
+            // dateStr format ex: "17/12/2568 18:41:00"
+            if (!dateStr) return null;
+            const parts = dateStr.split(' '); // แยกวันที่กับเวลา
+            const dateParts = parts[0].split('/'); // แยก วัน/เดือน/ปี
+            
+            if (dateParts.length !== 3) return new Date(dateStr); // Fallback
+
+            let day = parseInt(dateParts[0]);
+            let month = parseInt(dateParts[1]) - 1; // JS month 0-11
+            let year = parseInt(dateParts[2]);
+
+            // ถ้าปี > 2400 สันนิษฐานว่าเป็น พ.ศ. ให้ลบ 543
+            if (year > 2400) year -= 543;
+
+            return new Date(year, month, day);
+        }
+
+        function isSameDate(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        // === ADMIN: SALES & REPORT LOGIC ===
+
+        // 1. Logic ดึงข้อมูลและคำนวณยอดวันนี้
+        function processSalesData(sales) {
+            allSalesData = sales; // เก็บค่าไว้ใน Global Variable
+            applyDateFilter(); // เรียกใช้ฟังก์ชันกรอง
+        }
+
+        // 2. ฟังก์ชันกรองตารางตามวันที่เลือก (Filter)
+        function applyDateFilter() {
+            const filterInput = document.getElementById('filter-date').value;
+            const filterDate = filterInput ? new Date(filterInput) : null;
+            
+            const tbody = document.getElementById('sales-list');
+            
+            // กรองข้อมูล
+            const filteredSales = allSalesData.filter(s => {
+                if (!filterDate) return true; // ถ้าไม่เลือกวัน ให้โชว์หมด
+                const recordDate = parseThaiDate(s.time);
+                return isSameDate(recordDate, filterDate);
+            });
+
+            // อัปเดตตาราง
+            renderSalesTable(filteredSales);
+            
+            // คำนวณยอดขาย "วันนี้" (แยกคำนวณจากตาราง)
+            calculateTodayMetrics();
+        }
+
+        // 3. Render ตารางรายการขาย
+        function renderSalesTable(sales) {
+            const tbody = document.getElementById('sales-list');
+            document.getElementById('table-row-count').innerText = `${sales.length} รายการ`;
+
+            if(!sales.length) return tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">ไม่พบรายการในช่วงเวลานี้</td></tr>`;
+
+            tbody.innerHTML = sales.map(s => {
+                const isPaid = s.paymentStatus === 'ชำระเงินแล้ว';
+                const statusBadge = isPaid 
+                    ? `<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">ชำระแล้ว</span>`
+                    : `<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">รอชำระ</span>`;
+                
+                const actionBtn = isPaid
+                    ? `<span class="text-gray-400 text-xs"><i data-feather="check"></i> เรียบร้อย</span>`
+                    : `<button onclick='openPaymentModal(${JSON.stringify(s)})' class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow">ชำระเงิน</button>`;
+
+                return `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-4"><div class="text-xs text-gray-500">${s.time}</div><div class="font-bold">${s.tableName}</div></td>
+                    <td class="p-4"><div class="text-sm font-medium">${s.buyerName}</div><div class="text-xs text-gray-500 truncate w-32">${s.items}</div></td>
+                    <td class="p-4 text-right font-bold text-gray-700">฿${s.total}</td>
+                    <td class="p-4 text-center">${statusBadge}</td>
+                    <td class="p-4 text-center">${actionBtn}</td>
+                </tr>`;
+            }).join('');
+            feather.replace();
+        }
+
+        // 4. คำนวณยอดขายรวม "วันนี้" เท่านั้น
+        function calculateTodayMetrics() {
+            const today = new Date();
+            const todaySales = allSalesData.filter(s => {
+                const d = parseThaiDate(s.time);
+                return isSameDate(d, today);
+            });
+            const total = todaySales.reduce((sum, item) => sum + item.total, 0);
+            document.getElementById('sales-today-total').innerText = `฿${total.toLocaleString()}`;
+        }
+
+        // 5. REPORT MODAL FUNCTIONS
+        function openReportModal() {
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-result').classList.add('hidden');
+        }
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function generateSummaryReport() {
+            const startStr = document.getElementById('report-start').value;
+            const endStr = document.getElementById('report-end').value;
+
+            if(!startStr || !endStr) { alert("กรุณาเลือกช่วงวันที่"); return; }
+
+            const startDate = new Date(startStr);
+            const endDate = new Date(endStr);
+            // ตั้งเวลาให้ครอบคลุมทั้งวัน
+            startDate.setHours(0,0,0,0);
+            endDate.setHours(23,59,59,999);
+
+            // กรองข้อมูลช่วงเวลา และต้องชำระเงินแล้วเท่านั้น (Optional: หรือจะเอาทั้งหมดก็ได้)
+            const reportData = allSalesData.filter(s => {
+                const d = parseThaiDate(s.time);
+                // เช็คช่วงเวลา และ เช็คสถานะ (ถ้าต้องการเฉพาะที่จ่ายเงินแล้วให้ uncomment บรรทัดล่าง)
+                // return d >= startDate && d <= endDate && s.paymentStatus === 'ชำระเงินแล้ว';
+                return d >= startDate && d <= endDate; 
+            });
+
+            // คำนวณยอดรวม
+            const grandTotal = reportData.reduce((sum, item) => sum + item.total, 0);
+            
+            // นับจำนวนสินค้า (Item Aggregation)
+            const itemCounts = {};
+            reportData.forEach(order => {
+                // order.items format: "ข้าวมันไก่ (2), น้ำโค้ก (1)"
+                const itemsArr = order.items.split(', ');
+                itemsArr.forEach(itemStr => {
+                    // Extract Name and Qty using Regex or Split
+                    // itemStr looks like "Name (Qty)"
+                    const match = itemStr.match(/(.*) \((\d+)\)/);
+                    if(match) {
+                        const name = match[1];
+                        const qty = parseInt(match[2]);
+                        if(itemCounts[name]) itemCounts[name] += qty;
+                        else itemCounts[name] = qty;
+                    }
+                });
+            });
+
+            // แปลง Object เป็น Array เพื่อเรียงลำดับ
+            const sortedItems = Object.entries(itemCounts)
+                .map(([name, qty]) => ({ name, qty }))
+                .sort((a, b) => b.qty - a.qty); // เรียงมากไปน้อย
+
+            // แสดงผล UI
+            document.getElementById('report-grand-total').innerText = `฿${grandTotal.toLocaleString()}`;
+            document.getElementById('report-order-count').innerText = `${reportData.length}`;
+            
+            const listHtml = sortedItems.map(i => `
+                <tr class="hover:bg-gray-50 border-b last:border-0">
+                    <td class="p-3 text-gray-700">${i.name}</td>
+                    <td class="p-3 text-right font-bold text-gray-900">${i.qty}</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('report-item-list').innerHTML = listHtml || '<tr><td colspan="2" class="p-4 text-center text-gray-400">ไม่มีข้อมูล</td></tr>';
+            
+            document.getElementById('report-result').classList.remove('hidden');
+        }
+
+        // === GENERAL FUNCTIONS (User, Cart, etc.) ===
+        // ... (Functions เดิม: fetchProducts, addToCart, submitOrder ฯลฯ ใช้เหมือนเดิม) ...
+        
         async function fetchProducts() {
             toggleLoading(true);
             try {
@@ -261,12 +479,12 @@
                     <div class="p-3 flex flex-col flex-1">
                         <h3 class="font-bold text-gray-800 line-clamp-1">${p.name}</h3>
                         <p class="text-blue-600 font-bold mb-3">฿${p.price}</p>
-                        <button onclick="addToCart(${p.id})" class="mt-auto w-full bg-gray-50 text-blue-600 py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition">เพิ่ม +</button>
+                        <button onclick="addToCart(${p.id})" class="mt-auto w-full bg-gray-50 text-blue-600 py-2 rounded-lg text-sm font-bold hover:bg-blue-600 hover:text-white transition">เพิ่ม +</button>
                     </div>
                 </div>`;
             }).join('');
         }
-        
+
         function filterCategory(cat) {
             currentCat = cat;
             document.querySelectorAll('.cat-btn').forEach(btn => btn.className = `cat-btn flex-shrink-0 px-6 py-2 rounded-full transition ${btn.dataset.cat===cat ? 'bg-blue-600 text-white shadow-md':'bg-white text-gray-600 border border-gray-200'}`);
@@ -282,9 +500,9 @@
 
         function updateCartUI() {
             const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-            const badge = document.getElementById('cart-badge');
-            badge.innerText = totalItems;
-            badge.classList.toggle('hidden', totalItems === 0);
+            document.getElementById('cart-badge').innerText = totalItems;
+            document.getElementById('cart-badge').classList.toggle('hidden', totalItems === 0);
+            
             const container = document.getElementById('cart-items');
             container.innerHTML = cart.map((item, idx) => `
                 <div class="flex gap-4 items-center">
@@ -299,6 +517,7 @@
                         <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-gray-200 rounded">+</button>
                     </div>
                 </div>`).join('');
+            
             const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
             document.getElementById('cart-total').innerText = `฿${total}`;
         }
@@ -335,7 +554,7 @@
             finally { toggleLoading(false); }
         }
 
-        // === POLLING STATUS ===
+        // Polling Logic
         function checkExistingOrder() {
             const lastOrder = localStorage.getItem('lastOrderId');
             if(lastOrder) { showStatusBar(lastOrder); startPolling(lastOrder); }
@@ -368,12 +587,9 @@
             bar.classList.add('translate-y-full'); setTimeout(()=>bar.classList.add('hidden'),300);
         }
 
-        // ===============================================
-        //  ADMIN SYSTEM
-        // ===============================================
-
+        // === ADMIN LOGIC ===
         function accessAdmin() {
-            if(prompt("รหัสผ่าน Admin:") === "1234") {
+            if(prompt("รหัสผ่าน Admin:") === "Admin1234") {
                 switchPage('admin');
                 refreshAdminData();
             }
@@ -407,7 +623,7 @@
         }
 
         async function refreshAdminData() {
-            toggleLoading(true, "กำลังโหลดข้อมูล...");
+            toggleLoading(true, "กำลังโหลด...");
             try {
                 if(activeAdminTab === 'kitchen') {
                     const res = await fetch(`${API_URL}?action=getOrders`);
@@ -415,17 +631,16 @@
                     renderKitchenList(orders);
                 } else {
                     const res = await fetch(`${API_URL}?action=getSalesReport`);
-                    allSalesData = await res.json(); // เก็บข้อมูลดิบไว้ก่อน
-                    filterSalesByDate(); // เรียกฟังก์ชันกรองและแสดงผล
+                    const sales = await res.json();
+                    processSalesData(sales); // ส่งข้อมูลไปประมวลผล
                 }
             } catch(e) { console.error(e); } 
             finally { toggleLoading(false); }
         }
 
-        // --- Render Kitchen ---
         function renderKitchenList(orders) {
             const tbody = document.getElementById('kitchen-list');
-            if(!orders.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">ว่างเปล่า</td></tr>`;
+            if(!orders.length) return tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">ไม่มีออเดอร์</td></tr>`;
             tbody.innerHTML = orders.map(o => {
                 let statusColor = "bg-gray-100 text-gray-600";
                 if(o.status === 'กำลังปรุง') statusColor = "bg-blue-100 text-blue-700";
@@ -437,7 +652,6 @@
                 } else if(o.status === 'กำลังปรุง') {
                     buttons = `<button onclick="setKitchenStatus('${o.orderNumber}', 'เสร็จสิ้น')" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded text-xs flex items-center gap-1 shadow"><i data-feather="check-circle" class="w-4 h-4"></i> เสร็จ</button>`;
                 }
-
                 return `
                 <tr class="hover:bg-gray-50 border-b">
                     <td class="p-4"><div class="font-bold">${o.tableName}</div><div class="text-xs text-gray-500">${o.time.split(' ')[1]||o.time}</div></td>
@@ -459,77 +673,6 @@
             finally { toggleLoading(false); }
         }
 
-        // --- SALES & FILTERING LOGIC (NEW) ---
-        function resetDateFilter() {
-            document.getElementById('sales-date-picker').valueAsDate = new Date();
-            filterSalesByDate();
-        }
-
-        function filterSalesByDate() {
-            const inputDate = document.getElementById('sales-date-picker').value; // yyyy-mm-dd
-            if(!inputDate) return;
-
-            // แปลงวันที่ input เป็น array [YYYY, MM, DD]
-            const [selY, selM, selD] = inputDate.split('-').map(Number);
-
-            // กรองข้อมูล
-            const filteredSales = allSalesData.filter(item => {
-                // item.time รูปแบบ "17/12/2568 18:30:00"
-                // แยก String
-                const [datePart, timePart] = item.time.split(' ');
-                const [d, m, yThai] = datePart.split('/').map(Number);
-                
-                // แปลง พ.ศ. เป็น ค.ศ. (2568 - 543 = 2025)
-                const yEng = yThai > 2400 ? yThai - 543 : yThai;
-
-                // เปรียบเทียบ
-                return d === selD && m === selM && yEng === selY;
-            });
-
-            // อัปเดต UI
-            const tableTitle = document.getElementById('sales-table-title');
-            const formattedDate = new Date(selY, selM-1, selD).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-            tableTitle.innerText = `รายการขาย: ${formattedDate}`;
-
-            renderSalesList(filteredSales);
-        }
-
-        function renderSalesList(sales) {
-            const tbody = document.getElementById('sales-list');
-            const badge = document.getElementById('sales-count-badge');
-            
-            // Calculate Total Revenue
-            const totalRevenue = sales.reduce((sum, item) => sum + item.total, 0);
-            document.getElementById('sales-total-revenue').innerText = `฿${totalRevenue.toLocaleString()}`;
-            badge.innerText = `${sales.length} รายการ`;
-
-            if(!sales.length) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400 border-b">ไม่มีรายการขายในวันที่เลือก</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = sales.map(s => {
-                const isPaid = s.paymentStatus === 'ชำระเงินแล้ว';
-                const statusBadge = isPaid 
-                    ? `<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">ชำระแล้ว</span>`
-                    : `<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">รอชำระ</span>`;
-                
-                const actionBtn = isPaid
-                    ? `<span class="text-gray-400 text-xs flex justify-center items-center gap-1"><i data-feather="check" class="w-3 h-3"></i> เรียบร้อย</span>`
-                    : `<button onclick='openPaymentModal(${JSON.stringify(s)})' class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs shadow">ชำระเงิน</button>`;
-
-                return `
-                <tr class="hover:bg-gray-50 border-b last:border-0">
-                    <td class="p-4"><div class="text-xs text-gray-500">${s.time.split(' ')[1]}</div><div class="font-bold text-gray-800">${s.tableName}</div></td>
-                    <td class="p-4"><div class="text-sm font-medium text-gray-800">${s.buyerName}</div><div class="text-xs text-gray-500 truncate w-40 mt-0.5">${s.items}</div></td>
-                    <td class="p-4 text-right font-bold text-gray-700">฿${s.total}</td>
-                    <td class="p-4 text-center">${statusBadge}</td>
-                    <td class="p-4 text-center">${actionBtn}</td>
-                </tr>`;
-            }).join('');
-            feather.replace();
-        }
-
         // --- Payment Logic ---
         function openPaymentModal(order) {
             currentPaymentOrder = order;
@@ -539,49 +682,30 @@
             document.getElementById('payment-modal').classList.remove('hidden');
             document.getElementById('pay-received').focus();
         }
-
         function closePaymentModal() {
             document.getElementById('payment-modal').classList.add('hidden');
             currentPaymentOrder = null;
         }
-
         function calculateChange() {
             if(!currentPaymentOrder) return;
             const received = parseFloat(document.getElementById('pay-received').value) || 0;
             const change = received - currentPaymentOrder.total;
             const changeEl = document.getElementById('pay-change');
-            if(change >= 0) {
-                changeEl.innerText = `฿${change.toFixed(2)}`;
-                changeEl.className = "font-bold text-xl text-green-600";
-            } else {
-                changeEl.innerText = `ขาด ฿${Math.abs(change).toFixed(2)}`;
-                changeEl.className = "font-bold text-xl text-red-600";
-            }
+            if(change >= 0) { changeEl.innerText = `฿${change.toFixed(2)}`; changeEl.className = "font-bold text-xl text-green-600"; } 
+            else { changeEl.innerText = `ขาด ฿${Math.abs(change).toFixed(2)}`; changeEl.className = "font-bold text-xl text-red-600"; }
         }
-
         async function confirmPayment() {
             if(!currentPaymentOrder) return;
             const received = parseFloat(document.getElementById('pay-received').value) || 0;
-            if(received < currentPaymentOrder.total) {
-                alert("ยอดเงินรับไม่เพียงพอ");
-                return;
-            }
-
-            if(!confirm("ยืนยันการรับยอดชำระ?")) return;
-
-            toggleLoading(true, "กำลังบันทึก...");
+            if(received < currentPaymentOrder.total) { alert("เงินไม่พอ"); return; }
+            if(!confirm("ยืนยันการรับเงิน?")) return;
+            toggleLoading(true);
             try {
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'updatePayment', 
-                        orderNumber: currentPaymentOrder.orderNumber 
-                    }) 
-                });
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updatePayment', orderNumber: currentPaymentOrder.orderNumber }) });
                 closePaymentModal();
-                refreshAdminData(); // ระบบจะรีเฟรชและ filter วันที่เดิมให้อัตโนมัติ
-                alert("บันทึกการชำระเงินเรียบร้อย");
-            } catch(e) { alert("เกิดข้อผิดพลาด"); }
+                refreshAdminData(); // Refresh ตาราง
+                alert("บันทึกแล้ว");
+            } catch(e) { alert("Error"); }
             finally { toggleLoading(false); }
         }
 
